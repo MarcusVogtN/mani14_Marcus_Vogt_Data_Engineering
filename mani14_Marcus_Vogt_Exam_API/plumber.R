@@ -1,7 +1,3 @@
-# ===================================================================
-# Plumber API: Superliga Player Stats 2024/2025
-# ===================================================================
-
 library(plumber)
 library(readxl)
 library(dplyr)
@@ -9,18 +5,16 @@ library(jsonlite)
 library(stringr)
 library(ggplot2)
 
-# ---------------------------
-# Load and clean data once
-# ---------------------------
+#* @apiTitle Superliga Player & Team Stats 2024/2025
+#* @apiDescription Find different stats and plots about Superliga players and teams.
 
-# Læs Excel-data (filen skal ligge i samme mappe som denne .R-fil)
 football_data_raw <- readxl::read_excel("football_stats.xlsx")
 
 # List of known Danish Superliga teams (2024/2025)
 superliga_teams <- c(
   "København", "Brøndby", "Midtjylland", "AGF", "Nordsjælland",
   "Viborg", "Vejle", "AaB", "Silkeborg", "Randers",
-  "Lyngby", "OB", "Sønderjyske", "SønderjyskE"
+  "Lyngby", "Sønderjyske", "SønderjyskE"
 )
 
 # Definér relevante kolonner
@@ -35,10 +29,13 @@ normalize_column <- function(x) {
   (x - rng[1]) / (rng[2] - rng[1])
 }
 
+# Filter for players who have played for a Superliga team during the period AND currently
 football_data <- football_data_raw |>
   filter(
     `Current team` %in% superliga_teams,
-    !grepl("U19", `Current team`, ignore.case = TRUE)
+    `Team within selected timeframe` %in% superliga_teams,
+    !grepl("U19", `Current team`, ignore.case = TRUE), # Removes U19
+    !grepl("U19", `Team within selected timeframe`, ignore.case = TRUE)
   ) |>
   mutate(across(all_of(metrics), as.numeric)) |>
   mutate(across(all_of(metrics), ~ normalize_column(.x))) |>
@@ -47,9 +44,9 @@ football_data <- football_data_raw |>
   ungroup()
 
 # One player has "Sønderjyske" spelled "SønderjyskE"
-football_data <- football_data |>  mutate(`Current team` = ifelse(`Current team` == "SønderjyskE", "Sønderjyske", `Current team`))
-
-# write_csv(football_data, "football_data.csv")
+football_data <- football_data |>  mutate(
+  `Current team` = ifelse(`Current team` == "SønderjyskE", "Sønderjyske", `Current team`),
+  `Team within selected timeframe` = ifelse(`Team within selected timeframe` == "SønderjyskE", "Sønderjyske", `Team within selected timeframe`))
 
 # Endpoint 1.1 – Flexible top players (with total_score)
 
@@ -68,21 +65,19 @@ function(stat = "all", n = 10) {
   if (stat == "all") {
     df <- football_data |>
       arrange(desc(total_score)) |>
-      select(Player, `Current team`, all_of(metrics), total_score) |>
+      select(Player, `Current team`, `Team within selected timeframe`, all_of(metrics), total_score) |>
       head(n)
   } else {
     df <- football_data |>
       arrange(desc(.data[[stat]])) |>
-      select(Player, `Current team`, all_of(stat)) |>
+      select(Player, `Current team`, `Team within selected timeframe`, all_of(stat)) |>
       head(n)
   }
   
   return(df)
 }
 
-# ---------------------------
-# Endpoint 1.2 – Top players for a specific team (flexible)
-# ---------------------------
+# Endpoint 1.2 – Top players for a specific team
 
 #* Get top players from a specific Superliga team based on chosen stat or combined score
 #* @param team Team name (partial match allowed)
@@ -110,21 +105,19 @@ function(team = "", stat = "all", n = 10) {
   if (stat == "all") {
     df <- team_filtered |>
       arrange(desc(total_score)) |>
-      select(Player, `Current team`, all_of(metrics), total_score) |>
+      select(Player, `Current team`, `Team within selected timeframe`, all_of(metrics), total_score) |>
       head(n)
   } else {
     df <- team_filtered |>
       arrange(desc(.data[[stat]])) |>
-      select(Player, `Current team`, all_of(stat)) |>
+      select(Player, `Current team`, `Team within selected timeframe`, all_of(stat)) |>
       head(n)
   }
   
   return(df)
 }
 
-# ---------------------------
-# Endpoint 1.3 – Average stat(s) per team (with stat param)
-# ---------------------------
+# Endpoint 1.3 – Average stat(s) per team
 
 #* Get average stat(s) per Superliga team
 #* @param stat One of: "xG per 90", "xA per 90", "Touches in box per 90", or "all" [default]
@@ -186,6 +179,7 @@ function() {
       y = "Goals minus Expected Goals (xG)"
     ) +
     scale_fill_manual(values = c("TRUE" = "#2ca25f", "FALSE" = "#de2d26"))
+  
   print(p)
 }
 

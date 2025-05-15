@@ -1,0 +1,23 @@
+---
+title: "Part 4: Explain it"
+format: pdf
+editor: visual
+---
+
+## Part 4: Explain it
+
+## Three key steps to ensure a successful implementation of new pipeline.
+
+(Intended for management with limited techical knowledge)
+
+## 1. Automate the weekly update of new player data including the most recent games
+
+Instead of downloading and opening files manually, we can set up the system to automatically collect updated player statistics every Monday morning after the weekend matches. This will save time for staff, ensure reliable data updates and reduce potential human errors. Once it’s set up, it runs on its own with minimal cost.
+
+## 2. Provide easy access to insights
+
+We will create an internal dashboard where staff can view updated statistics, player comparisons, and download PDF reports, all with one click, no technical skills needed. This makes it easy to prepare for meetings, evaluate player performance, and share insights. The solution runs on a standard computer, with no need for new expensive solutions.
+
+## 3. Make it a natural part of the workflow
+
+We recommend using the dashboard in monthly meetings and encouraging staff to use the report feature when reviewing players. The more it’s used, the more value it creates. This isn’t just about data, it’s about supporting decisions and creating a consistent, professional process that makes it easy and ”natural” to use data to guide decisions.
